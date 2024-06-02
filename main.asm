@@ -1,70 +1,100 @@
+; 64KB space for program
 .model small
+; 256 bytes stack
 .stack 100h
+
+; Data segment
 .data
 
-MAX_ITEMS equ 40
+; Constants
+MAX_ITEMS equ 40    ; Maximum number of items
 
-ItemList dw 00, 01, 02, 03, 04, 05, 06, 07, 08, 09
-            db "M.board   ",  "Memory    ", "CPU       ", "GPU       ", "Power Unit", "Comp. case", "Fans      ", "HDD       ", "SSD       ", "Monitor   "
-            dw 10, 1, 10, 2, 10, 3, 10, 4, 10, 5, 1500, 800, 2000, 1700, 800, 600, 400, 1200, 1500, 1300, 2, 1, 0, 0, 1, 1, 2, 1, 2, 0, '$'
+; Data Definitions
+ItemAmount dw 2                     ; Initial item amount
+ItemNameLength equ 20               ; Length of item name
+ItemID equ 2                        ; Item ID
+ItemValue equ 2                     ; Item value
+ItemData dw 2, 1, 0, 2, 1, 0, 40, 10, 19, 13, '$' ; Item data values
+ItemPriceList dw 5, 8, 4, 2, 4, 9, 8, 1, 8, 10, '$' ; Item price list
+TotalSales dw 0                     ; Total sales amount
 
-ItemAmount dw 2
-ItemNameLength equ 20
-ItemID equ 2
-ItemValue equ 2
-ItemData dw 2, 1, 0, 2, 1, 0, 40, 10, 19, 13, '$' 
-ItemPriceList dw 5, 8, 4, 2, 4, 9, 8, 1, 8, 10, '$'
-TotalSales dw 0
+BlankSpace db '                           ','$' ; Blank space string
 
-BlankSpace db '                           ','$'
+; Menu and Prompts
+MainMenu db 10,10,10, "------------------------", 10 ; Main menu start
+         db "--- Inventory System ---", 10           ; Main menu title
+         db "------------------------", 10,10        ; Main menu separator
+         db "1. Display Items", 10                   ; Menu option 1
+         db "2. Add Item", 10                        ; Menu option 2
+         db "3. Sell Item", 10                       ; Menu option 3
+         db "0. Exit Program", 10,10                 ; Menu option 0
+         db "------------------------", '$'          ; Main menu end
 
-MainMenu db 10,10,10, "------------------------", 10, "--- Inventory System ---", 10, "------------------------", 10,10, "1. Display Items", 10, "2. Add Item", 10, "3. Sell Item", 10, "0. Exit Program", 10,10, "------------------------", '$'
+InputError db 10, 'Invalid option selected.', 10, '$' ; Input error message
 
-InputError db 10, 'Invalid option selected.', 10, '$'
+ItemHeader db 10, '==============| INVENTORY |==============', 10 ; Item header start
+           db '==============================================', 10 ; Item header separator
+           db 'ID', 9, 'Name', 9, 9, 'Price', 9, 'Quantity', 10,10, '$' ; Item header columns
 
-ItemHeader db 10, '==============| INVENTORY |==============', 10, '==============================================', 10, 'ID', 9, 'Name', 9, 9, 'Price', 9, 'Quantity', 10, 10, '$'
-RestockMessage db '==============================================', 10, 10, ' Items are low in stock, please restock.', 10, 10, '==============================================', 10, 10, '1. Main Menu', 10, 10, '0. Exit Program', 10, 10, 'Please select an option: $'
+RestockMessage db '==============================================', 10,10 ; Restock message start
+              db ' Items are low in stock, please restock.', 10,10        ; Restock message body
+              db '==============================================', 10,10   ; Restock message separator
+              db '1. Main Menu', 10,10                                    ; Restock menu option 1
+              db '0. Exit Program', 10,10                                 ; Restock menu option 0
+              db 'Please select an option: $'                             ; Restock menu prompt
 
-ItemToRestock dw ?
-ItemRestockID dw ?
+ItemToRestock dw ?                    ; Variable for item to restock
+ItemRestockID dw ?                    ; Variable for restock item ID
 
-RestockHeader db '==============================================', 10, 10, 9, 9, 32, 32, 'ADD ITEMS', 10, 10, '==============================================', 10, 10, 'Enter item ID: $'
-RestockPrompt db 10, 10, 10, 10, 'Enter quantity to restock from 1 to 9: $'
-RestockSuccess db 10, 10, 10, 10, ' Item restocked successfully.', 10, '$'
+RestockHeader db '==============================================', 10,10 ; Restock header start
+             db 9, 9, 32, 32, 'ADD ITEMS', 10,10                         ; Restock header title
+             db '==============================================', 10,10   ; Restock header separator
+             db 'Enter item ID: $'                                       ; Restock prompt
 
-SellHeader db '==============================================', 10, 10, 9, 9, 32, 32, 'SELL ITEM', 10, 10, '==============================================', 10, 10, 'Enter item ID: $'
-SellPrompt db 10, 10, 10, 10, 'Enter quantity to sell from 1 to 9: $'
-SellSuccess db 10, 10, 10, 10, ' Item sold successfully.', 10, '$'
-SellFailure db 10, 10, 10, 10, ' Insufficient quantity to sell.', 10, '$'
+RestockPrompt db 10,10, 'Enter quantity to restock from 1 to 9: $' ; Restock quantity prompt
+RestockSuccess db 10,10, ' Item restocked successfully.', 10, '$' ; Restock success message
 
-UserInputPrompt db 10, 10, 10, 10, 'Please select an option: $'
-GoodbyeMessage db 10, 10, 10, 10, '=======| Thank you for using the inventory system |=======','$'
+SellHeader db '==============================================', 10,10 ; Sell header start
+           db 9, 9, 32, 32, 'SELL ITEM', 10,10                         ; Sell header title
+           db '==============================================', 10,10   ; Sell header separator
+           db 'Enter item ID: $'                                        ; Sell prompt
+
+SellPrompt db 10,10, 'Enter quantity to sell from 1 to 9: $' ; Sell quantity prompt
+SellSuccess db 10,10, ' Item sold successfully.', 10, '$'    ; Sell success message
+SellFailure db 10,10, ' Insufficient quantity to sell.', 10, '$' ; Sell failure message
+
+UserInputPrompt db 10,10, 'Please select an option: $' ; User input prompt
+GoodbyeMessage db 10,10, '=======| Thank you for using the inventory system |=======','$' ; Goodbye message
+
 
 .code
 main PROC
-  mov ax, @data 
-  mov ds, ax 
+;Getting the data segment address and loading into data segment register
+  mov ax, @data       
+  mov ds, ax          
   
-  call DisplayMainMenu
+  call DisplayMainMenu ; Call procedure to display the main menu
   
-  mov ah, 01h 
-  int 21h
+  mov ah, 01h         
+  int 21h             ; Read user input and interrupt of reading
 
-  cmp al, '1'
-  je ShowItems
+  ;Basically a switch statement implemented in Assembly
+  cmp al, '1'         
+  je ShowItems        ; jump to ShowItems
   
-  cmp al, '2'
-  je AddItemsMenu
+  cmp al, '2'         
+  je AddItemsMenu     ; jump to AddItemsMenu
   
-  cmp al, '3'
-  je SellItemsMenu
+  cmp al, '3'         
+  je SellItemsMenu    ; jump to SellItemsMenu
   
-  cmp al, '0'
-  je ExitProgram
+  cmp al, '0'         
+  je ExitProgram      ; jump to ExitProgram
 
-  jmp main
+  jmp main            ; Similar to break(), jumps back to main function
 
-ShowItems:
+;ShowItems Procedure Segment
+ShowItems:              
     call ClearScreen
     call DisplayItems
     call NavigateAfterDisplay
@@ -73,7 +103,7 @@ ShowItems:
 AddItemsMenu:
     call ClearScreen
     call DisplayItems
-    call RestockItems
+    call SupplyItems
     ret
 
 SellItemsMenu:
@@ -88,7 +118,7 @@ ExitProgram:
     ret
 
 NavigateAfterDisplay:
-    lea dx, RestockMessage
+    lea dx, SupplyMessage
     mov ah, 09h
     int 21h
 
@@ -223,8 +253,8 @@ ItemLoop:
 ItemsDone:
     ret
 
-RestockItems:
-    lea dx, RestockHeader
+SupplyItems:
+    lea dx, SupplyHeader
     mov ah, 09h
     int 21h 
     mov ah, 01
@@ -233,8 +263,8 @@ RestockItems:
     add al, al
     sub ax, 136
 
-    mov ItemToRestock, ax 
-    lea dx, RestockPrompt
+    mov ItemToSupply, ax 
+    lea dx, SupplyPrompt
     mov ah, 09h 
     int 21h
 
@@ -244,14 +274,14 @@ RestockItems:
     sub ax, 256
     mov cx, ax
     lea si, ItemList
-    add si, ItemToRestock
+    add si, ItemToSupply
     add cx, [si]
     mov word ptr [si], cx 
     
     call ClearScreen
     call PrintNewLine
     call PrintBlank
-    lea dx, RestockSuccess
+    lea dx, SupplySuccess
     mov ah, 09h 
     int 21h 
     call PrintBlank
@@ -270,7 +300,7 @@ SellItems:
     sub al, 30h
     add al, al 
     sub ax, 136 
-    mov ItemToRestock, ax 
+    mov ItemToSupply, ax 
 
     lea dx, SellPrompt
     mov ah, 09h 
@@ -283,7 +313,7 @@ SellItems:
     mov cx, ax
 
     lea si, ItemList
-    add si, ItemToRestock
+    add si, ItemToSupply
     mov bx, [si] 
     sub bx, cx
     cmp bx, 0
