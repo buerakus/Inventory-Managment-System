@@ -9,64 +9,73 @@
 ; Constants
 MAX_ITEMS equ 40    ; Maximum number of items
 
-; Data Definitions
-ItemAmount dw 2                     ; Initial item amount
-ItemNameLength equ 20               ; Length of item name
-ItemID equ 2                        ; Item ID
-ItemValue equ 2                     ; Item value
-ItemData dw 2, 1, 0, 2, 1, 0, 40, 10, 19, 13, '$' ; Item data values
-ItemPriceList dw 5, 8, 4, 2, 4, 9, 8, 1, 8, 10, '$' ; Item price list
-TotalSales dw 0                     ; Total sales amount
+; Item attributes definitions
+ItemAmount dw 2                     
+ItemNameLength equ 20               
+ItemID equ 2                        
+ItemValue equ 2                     
+ItemData dw 2, 1, 0, 2, 1, 0, 40, 10, 19, 13, '$' 
+ItemPriceList dw 5, 8, 4, 2, 4, 9, 8, 1, 8, 10, '$' ;
+TotalSales dw 0                     
 
+LowStockHeader db 10, '==============| LOW STOCK ITEMS |==============', 10 
+               db '==============================================', 10 
+               db 'ID', 9, 'Name', 9, 9, 'Quantity', 10,10, '$'
+
+; Main menu attributes definitions
+MainMenu db 10,10,10, "------------------------", 10 
+         db "--- Inventory System ---", 10           
+         db "------------------------", 10,10        
+         db "1. Display Items", 10                   
+         db "2. Add Item", 10                        
+         db "3. Sell Item", 10
+         db "4. Display Low Stock Items", 10      ; New option added                  
+         db "0. Exit Program", 10,10                 
+         db "------------------------", '$'    
+
+;Item`s header and columns
+ItemList dw 00, 01, 02, 03, 04, 05, 06, 07, 08, 09
+         db "M.board   ", "Memory    ", "CPU       ", "GPU       ", "Power Unit", "Comp. case", "Fans      ", "HDD       ", "SSD       ", "Monitor   "
+         dw 10, 1, 10, 2, 10, 3, 10, 4, 10, 5, 1500, 800, 2000, 1700, 800, 600, 400, 1200, 1500, 1300, 2, 1, 0, 0, 1, 1, 2, 1, 2, 0, '$'
+ItemHeader db 10, '==============| INVENTORY |==============', 10 
+           db '==============================================', 10 
+           db 'ID', 9, 'Name', 9, 9, 'Price', 9, 'Quantity', 10,10, '$' 
+
+SupplyMessage db '==============================================', 10,10 
+              db ' Items are low in stock, please supply some.', 10,10        
+              db '==============================================', 10,10   
+              db '1. Main Menu', 10,10                                    
+              db '0. Exit Program', 10,10                                 
+              db 'Please select an option: $'                             
+
+ItemToSupply dw ?                    ; Variable for item to supply
+ItemSupplyID dw ?                    ; Variable for supply item ID
+
+;Supply definitions / Add items procedure
+SupplyHeader db '==============================================', 10,10 
+             db 9, 9, 32, 32, 'ADD ITEMS', 10,10                         
+             db '==============================================', 10,10   
+             db 'Enter item ID: $'                                       
+SupplyPrompt db 10,10, 'Enter quantity to supply from 1 to 9: $' 
+SupplySuccess db 10,10, ' Item supplied successfully.', 10, '$' 
+
+;Sell Menu Definitions
+SellHeader db '==============================================', 10,10 
+           db 9, 9, 32, 32, 'SELL ITEM', 10,10                         
+           db '==============================================', 10,10   
+           db 'Enter item ID: $'                                        ;
+SellPrompt db 10,10, 'Enter quantity to sell from 1 to 9: $' 
+SellSuccess db 10,10, ' Item sold successfully.', 10, '$'    
+SellFailure db 10,10, ' Insufficient quantity to sell.', 10, '$' 
+
+;Additional definitions
+InputError db 10, 'Invalid option selected.', 10, '$' ; Input error message
+UserInputPrompt db 10,10, 'Please select an option: $' ; User input prompt
+ExitMsgMessage db 10,10, '=======| Thank you for using the inventory system |=======','$' ; ExitMsg message
 BlankSpace db '                           ','$' ; Blank space string
 
-; Menu and Prompts
-MainMenu db 10,10,10, "------------------------", 10 ; Main menu start
-         db "--- Inventory System ---", 10           ; Main menu title
-         db "------------------------", 10,10        ; Main menu separator
-         db "1. Display Items", 10                   ; Menu option 1
-         db "2. Add Item", 10                        ; Menu option 2
-         db "3. Sell Item", 10                       ; Menu option 3
-         db "0. Exit Program", 10,10                 ; Menu option 0
-         db "------------------------", '$'          ; Main menu end
 
-InputError db 10, 'Invalid option selected.', 10, '$' ; Input error message
-
-ItemHeader db 10, '==============| INVENTORY |==============', 10 ; Item header start
-           db '==============================================', 10 ; Item header separator
-           db 'ID', 9, 'Name', 9, 9, 'Price', 9, 'Quantity', 10,10, '$' ; Item header columns
-
-RestockMessage db '==============================================', 10,10 ; Restock message start
-              db ' Items are low in stock, please restock.', 10,10        ; Restock message body
-              db '==============================================', 10,10   ; Restock message separator
-              db '1. Main Menu', 10,10                                    ; Restock menu option 1
-              db '0. Exit Program', 10,10                                 ; Restock menu option 0
-              db 'Please select an option: $'                             ; Restock menu prompt
-
-ItemToRestock dw ?                    ; Variable for item to restock
-ItemRestockID dw ?                    ; Variable for restock item ID
-
-RestockHeader db '==============================================', 10,10 ; Restock header start
-             db 9, 9, 32, 32, 'ADD ITEMS', 10,10                         ; Restock header title
-             db '==============================================', 10,10   ; Restock header separator
-             db 'Enter item ID: $'                                       ; Restock prompt
-
-RestockPrompt db 10,10, 'Enter quantity to restock from 1 to 9: $' ; Restock quantity prompt
-RestockSuccess db 10,10, ' Item restocked successfully.', 10, '$' ; Restock success message
-
-SellHeader db '==============================================', 10,10 ; Sell header start
-           db 9, 9, 32, 32, 'SELL ITEM', 10,10                         ; Sell header title
-           db '==============================================', 10,10   ; Sell header separator
-           db 'Enter item ID: $'                                        ; Sell prompt
-
-SellPrompt db 10,10, 'Enter quantity to sell from 1 to 9: $' ; Sell quantity prompt
-SellSuccess db 10,10, ' Item sold successfully.', 10, '$'    ; Sell success message
-SellFailure db 10,10, ' Insufficient quantity to sell.', 10, '$' ; Sell failure message
-
-UserInputPrompt db 10,10, 'Please select an option: $' ; User input prompt
-GoodbyeMessage db 10,10, '=======| Thank you for using the inventory system |=======','$' ; Goodbye message
-
-
+;Code segment
 .code
 main PROC
 ;Getting the data segment address and loading into data segment register
@@ -88,6 +97,9 @@ main PROC
   cmp al, '3'         
   je SellItemsMenu    ; jump to SellItemsMenu
   
+  cmp al, '4'
+  jmp DisplayLowStockItems ; jump to DisplayLowStockItems
+
   cmp al, '0'         
   je ExitProgram      ; jump to ExitProgram
 
@@ -95,90 +107,85 @@ main PROC
 
 ;ShowItems Procedure Segment
 ShowItems:              
-    call ClearScreen
+    call Refresh
     call DisplayItems
     call NavigateAfterDisplay
-    ret
-
-AddItemsMenu:
-    call ClearScreen
-    call DisplayItems
-    call SupplyItems
-    ret
-
-SellItemsMenu:
-    call ClearScreen
-    call DisplayItems
-    call SellItems
-    ret
-
-ExitProgram:
-    call ClearScreen
-    call Goodbye
     ret
 
 NavigateAfterDisplay:
     lea dx, SupplyMessage
     mov ah, 09h
     int 21h
-
     mov ah, 01h 
     int 21h
-
     cmp al, '0'
     je ExitProgram
-
     cmp al, '1'
     je main
-
     jmp main
-
     ret
 
-PrintInteger:
+AddItemsMenu:
+    call Refresh
+    call DisplayItems
+    call SupplyItems
+    ret
+
+SellItemsMenu:
+    call Refresh
+    call DisplayItems
+    call SellItems
+    ret
+
+ExitProgram:
+    call Refresh
+    call ExitMsg
+    ret
+
+PrintInt:
     push bx
     mov bx, 10
     xor cx, cx
 
-InnerLoop:
+LOOP:
     xor dx, dx
     div bx
     add dl, '0'
     push dx
     inc cx
     cmp ax, 0
-    jne InnerLoop
+    jne Loop
 
-PrintLoop:
+OutLoop:
     pop dx
     mov ah, 02
     int 21h
     dec cx
     cmp cx, 0
-    jne PrintLoop
+    jne OutLoop
     pop bx
     ret
 
-CheckValue5:
+CheckVal:
     mov bx, ax
     cmp bx, 5
     jle MarkValue
     ret
 
-PrintString:
+PrintStr:
     push ax 
     push bx
     push cx
     mov bx, dx 
     mov cx, 10 
 
-StringLoop:
+StrLoop:
     mov dl, [bx] 
     int 21h 
     inc bx 
-    loop StringLoop 
+    loop StrLoop 
 
-Done:
+RestoreStack:
     pop cx 
     pop bx
     pop ax
@@ -200,14 +207,14 @@ MarkLoop:
     inc bx 
     loop MarkLoop 
 
-MarkDone:
+MarkRestoreStack:
     pop cx 
     pop bx
     pop ax
     ret
 
 DisplayMainMenu:
-    call ClearScreen
+    call Refresh
     lea dx, MainMenu
     mov ah, 09h
     int 21h
@@ -225,32 +232,32 @@ DisplayItems:
     mov bp, 0
     lea si, ItemList
 
-ItemLoop:
+ItemsLoop:
     mov ax, [si]
     cmp ax, 10
-    ja ItemsDone
-    call PrintInteger
+    ja ItemsEnd
+    call PrintInt
     call PrintTab
 
     mov dx, offset ItemList + 20
     add dx, bp
-    call PrintString
+    call PrintStr
     call PrintTab
 
     mov ax, [si + 140]
-    call PrintInteger
+    call PrintInt
     call PrintTab
 
     mov ax, [si + 120]
-    call CheckValue5
+    call CheckVal
 
     mov ax, [si + 120]
-    call PrintInteger
+    call PrintInt
     call PrintNewLine
     add bp, 10
     add si, 2
-    jmp ItemLoop
-ItemsDone:
+    jmp ItemsLoop
+ItemsEnd:
     ret
 
 SupplyItems:
@@ -278,7 +285,7 @@ SupplyItems:
     add cx, [si]
     mov word ptr [si], cx 
     
-    call ClearScreen
+    call Refresh
     call PrintNewLine
     call PrintBlank
     lea dx, SupplySuccess
@@ -317,15 +324,15 @@ SellItems:
     mov bx, [si] 
     sub bx, cx
     cmp bx, 0
-    js InsufficientQuantity
+    js InsufficientAmount
 
     mov word ptr [si], bx
     jmp ItemSold
 
-InsufficientQuantity: 
+InsufficientAmount: 
     mov bx, [si]
     mov word ptr [si], bx
-    call ClearScreen
+    call Refresh
     call PrintNewLine
     call PrintBlank
     lea dx, SellFailure
@@ -338,8 +345,8 @@ InsufficientQuantity:
     ret 
 
 ItemSold:
-    call UpdateTotalSales
-    call ClearScreen
+    call TotalSold
+    call Refresh
     call PrintNewLine
     call PrintBlank
     lea dx, SellSuccess
@@ -352,7 +359,7 @@ ItemSold:
     call NavigateAfterDisplay
     ret
     
-UpdateTotalSales: 
+TotalSold: 
     mov ax, ItemAmount 
     sub ax, 120 
     mov ItemAmount, ax
@@ -363,14 +370,53 @@ UpdateTotalSales:
     mov word ptr [si], cx
     ret
 
-Goodbye:
-  lea dx, GoodbyeMessage
+DisplayLowStockItems:
+    mov dx, offset LowStockHeader
+    mov ah, 09h
+    int 21h
+
+    mov bp, 0
+    lea si, ItemList
+
+LowStockLoop:
+    mov ax, [si]
+    cmp ax, 10
+    ja LowStockEnd
+    mov ax, [si + 120]
+    cmp ax, 5
+    jge SkipItem
+
+    ; Display item ID
+    call PrintInt
+    call PrintTab
+
+    ; Display item name
+    mov dx, offset ItemList + 20
+    add dx, bp
+    call PrintStr
+    call PrintTab
+
+    ; Display item quantity
+    mov ax, [si + 120]
+    call PrintInt
+    call PrintNewLine
+
+SkipItem:
+    add bp, 10
+    add si, 2
+    jmp LowStockLoop
+
+LowStockEnd:
+    ret
+
+ExitMsg:
+  lea dx, ExitMsgMessage
   mov ah, 09h
   int 21h  
   mov ah, 4ch
   int 21h
 
-ClearScreen:
+Refresh:
     mov ah, 06h
     mov al, 0
     mov bh, 07h
