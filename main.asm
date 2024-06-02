@@ -371,42 +371,58 @@ TotalSold:
     ret
 
 DisplayLowStockItems:
-    mov dx, offset LowStockHeader
+    ; Clear the screen
+    call Refresh
+    
+    ; Display the Low Stock Header
+    lea dx, LowStockHeader
     mov ah, 09h
     int 21h
 
+    ; Initialize pointers and counters
     mov bp, 0
     lea si, ItemList
 
 LowStockLoop:
-    mov ax, [si]
-    cmp ax, 10
-    ja LowStockEnd
+    ; Load the current item quantity into ax
     mov ax, [si + 120]
-    cmp ax, 5
-    jge SkipItem
 
-    ; Display item ID
+    ; Compare the quantity to the low stock threshold (let's say 5)
+    cmp ax, 5
+    ja SkipLowStockItem  ; If quantity is greater than 5, skip the item
+
+    ; Print the item ID
+    mov ax, [si]
     call PrintInt
     call PrintTab
 
-    ; Display item name
+    ; Print the item name
     mov dx, offset ItemList + 20
     add dx, bp
     call PrintStr
     call PrintTab
 
-    ; Display item quantity
+    ; Print the item quantity
     mov ax, [si + 120]
     call PrintInt
     call PrintNewLine
 
-SkipItem:
+SkipLowStockItem:
+    ; Move to the next item in the list
     add bp, 10
     add si, 2
+
+    ; Check if we have processed all items
+    mov ax, [si]
+    cmp ax, 10
+    ja LowStockEnd
+
+    ; Continue the loop
     jmp LowStockLoop
 
 LowStockEnd:
+    ; Navigate after displaying low stock items
+    call NavigateAfterDisplay
     ret
 
 ExitMsg:
