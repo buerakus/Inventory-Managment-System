@@ -18,6 +18,7 @@ ItemData dw 2, 1, 0, 2, 1, 0, 40, 10, 19, 13, '$'
 ItemPriceList dw 5, 8, 4, 2, 4, 9, 8, 1, 8, 10, '$' ;
 TotalSales dw 0                     
 
+; Low Stock Item menu header
 LowStockHeader db 10, '==============| LOW STOCK ITEMS |==============', 10 
                db '==============================================', 10 
                db 'ID', 9, 'Name', 9, 9, 'Quantity', 10,10, '$'
@@ -29,7 +30,7 @@ MainMenu db 10,10,10, "------------------------", 10
          db "1. Display Items", 10                   
          db "2. Add Item", 10                        
          db "3. Sell Item", 10
-         db "4. Display Low Stock Items", 10      ; New option added                  
+         db "4. Display Low Stock Items", 10                      
          db "0. Exit Program", 10,10                 
          db "------------------------", '$'    
 
@@ -40,6 +41,7 @@ ItemList dw 00, 01, 02, 03, 04, 05, 06, 07, 08, 09
 ItemHeader db 10, '==============| INVENTORY |==============', 10 
            db '==============================================', 10 
            db 'ID', 9, 'Name', 9, 9, 'Price', 9, 'Quantity', 10,10, '$' 
+
 
 SupplyMessage db '==============================================', 10,10 
               db ' Items are low in stock, please supply some.', 10,10        
@@ -69,10 +71,10 @@ SellSuccess db 10,10, ' Item sold successfully.', 10, '$'
 SellFailure db 10,10, ' Insufficient quantity to sell.', 10, '$' 
 
 ;Additional definitions
-InputError db 10, 'Invalid option selected.', 10, '$' ; Input error message
-UserInputPrompt db 10,10, 'Please select an option: $' ; User input prompt
-ExitMsgMessage db 10,10, '=======| Thank you for using the inventory system |=======','$' ; ExitMsg message
-BlankSpace db '                           ','$' ; Blank space string
+InputError db 10, 'Invalid option selected.', 10, '$' 
+UserInputPrompt db 10,10, 'Please select an option: $' 
+ExitMsgMessage db 10,10, '=======| Thank you for using the inventory system |=======','$' 
+BlankSpace db '                           ','$' 
 
 
 ;Code segment
@@ -106,12 +108,14 @@ main PROC
   jmp main            ; Similar to break(), jumps back to main function
 
 ;ShowItems Procedure Segment
+
+;clears screen, shows items and handles user`s choice after 
 ShowItems:              
     call Refresh
     call DisplayItems
     call NavigateAfterDisplay
     ret
-
+;after successful execution, promts user to either leave to main menu or leave from program
 NavigateAfterDisplay:
     lea dx, SupplyMessage
     mov ah, 09h
@@ -125,6 +129,7 @@ NavigateAfterDisplay:
     jmp main
     ret
 
+;Menu functions, clears screen, shows items and proceed to the related procedures
 AddItemsMenu:
     call Refresh
     call DisplayItems
@@ -137,60 +142,18 @@ SellItemsMenu:
     call SellItems
     ret
 
+;program exit procedure
 ExitProgram:
     call Refresh
     call ExitMsg
     ret
-
-PrintInt:
-    push bx
-    mov bx, 10
-    xor cx, cx
-
-LOOP:
-    xor dx, dx
-    div bx
-    add dl, '0'
-    push dx
-    inc cx
-    cmp ax, 0
-    jne Loop
-
-OutLoop:
-    pop dx
-    mov ah, 02
-    int 21h
-    dec cx
-    cmp cx, 0
-    jne OutLoop
-    pop bx
-    ret
-
+;Check if ax value is greater than 5
 CheckVal:
     mov bx, ax
     cmp bx, 5
     jle MarkValue
     ret
-
-PrintStr:
-    push ax 
-    push bx
-    push cx
-    mov bx, dx 
-    mov cx, 10 
-
-StrLoop:
-    mov dl, [bx] 
-    int 21h 
-    inc bx 
-    loop StrLoop 
-
-RestoreStack:
-    pop cx 
-    pop bx
-    pop ax
-    ret
-
+;If value ax value less than 5, highlight the number onto display, thus allowing to have marked number of items that are low in stock
 MarkValue:
     push ax 
     push bx
@@ -212,7 +175,26 @@ MarkRestoreStack:
     pop bx
     pop ax
     ret
+;print strings(10 chars) by saving ax, bx, cx registers, printing out each character and restoring registers
+PrintStr:
+    push ax 
+    push bx
+    push cx
+    mov bx, dx 
+    mov cx, 10 
 
+StrLoop:
+    mov dl, [bx] 
+    int 21h 
+    inc bx 
+    loop StrLoop 
+
+RestoreStack:
+    pop cx 
+    pop bx
+    pop ax
+    ret
+;GUI functions
 DisplayMainMenu:
     call Refresh
     lea dx, MainMenu
@@ -224,6 +206,7 @@ DisplayMainMenu:
     int 21h
     ret
 
+;display GUI for items and item menu
 DisplayItems:
     mov dx, offset ItemHeader
     mov ah, 09
@@ -231,7 +214,7 @@ DisplayItems:
     
     mov bp, 0
     lea si, ItemList
-
+;iterate through items
 ItemsLoop:
     mov ax, [si]
     cmp ax, 10
@@ -260,6 +243,7 @@ ItemsLoop:
 ItemsEnd:
     ret
 
+;supply items - promt user for item id, quantity, add to total item number
 SupplyItems:
     lea dx, SupplyHeader
     mov ah, 09h
@@ -296,6 +280,7 @@ SupplyItems:
     call NavigateAfterDisplay
     ret
 
+;sell items - promt user to item id, promt for amount, deduct amount from total number of items
 SellItems:
     lea dx, SellHeader
     mov ah, 09h
@@ -329,6 +314,7 @@ SellItems:
     mov word ptr [si], bx
     jmp ItemSold
 
+;if sell amount > total amount, restore original item number, send error msg and return to menu
 InsufficientAmount: 
     mov bx, [si]
     mov word ptr [si], bx
@@ -344,6 +330,7 @@ InsufficientAmount:
     call NavigateAfterDisplay
     ret 
 
+;successful sale - update total sales, refresh, success msg, updated itemlist, back to menu
 ItemSold:
     call TotalSold
     call Refresh
@@ -358,7 +345,8 @@ ItemSold:
     call DisplayItems
     call NavigateAfterDisplay
     ret
-    
+
+;updates the total sold amount and adjusts item quantity
 TotalSold: 
     mov ax, ItemAmount 
     sub ax, 120 
@@ -370,61 +358,43 @@ TotalSold:
     mov word ptr [si], cx
     ret
 
+;displays items with low stock
 DisplayLowStockItems:
-    ; Clear the screen
     call Refresh
-    
-    ; Display the Low Stock Header
     lea dx, LowStockHeader
     mov ah, 09h
     int 21h
-
-    ; Initialize pointers and counters
     mov bp, 0
     lea si, ItemList
 
 LowStockLoop:
-    ; Load the current item quantity into ax
     mov ax, [si + 120]
-
-    ; Compare the quantity to the low stock threshold (let's say 5)
     cmp ax, 5
-    ja SkipLowStockItem  ; If quantity is greater than 5, skip the item
-
-    ; Print the item ID
+    ja SkipLowStockItem  
     mov ax, [si]
     call PrintInt
     call PrintTab
-
-    ; Print the item name
     mov dx, offset ItemList + 20
     add dx, bp
     call PrintStr
     call PrintTab
-
-    ; Print the item quantity
     mov ax, [si + 120]
     call PrintInt
     call PrintNewLine
 
 SkipLowStockItem:
-    ; Move to the next item in the list
     add bp, 10
     add si, 2
-
-    ; Check if we have processed all items
     mov ax, [si]
     cmp ax, 10
     ja LowStockEnd
-
-    ; Continue the loop
     jmp LowStockLoop
 
 LowStockEnd:
-    ; Navigate after displaying low stock items
     call NavigateAfterDisplay
     ret
 
+;displays exit message and terminates the program
 ExitMsg:
   lea dx, ExitMsgMessage
   mov ah, 09h
@@ -432,6 +402,7 @@ ExitMsg:
   mov ah, 4ch
   int 21h
 
+;clears the screen by scrolling the window
 Refresh:
     mov ah, 06h
     mov al, 0
@@ -441,6 +412,31 @@ Refresh:
     int 10h
     ret
 
+;converting int value to str value using ax register and prints on screen
+PrintInt:
+    push bx
+    mov bx, 10
+    xor cx, cx
+;converts value, push into stack in reverse order
+InLoopReverse:
+    xor dx, dx
+    div bx
+    add dl, '0'
+    push dx
+    inc cx
+    cmp ax, 0
+    jne InLoopReverse
+;outputs digits of int pushed into stack, reversing second time, output appear in correct order
+OutLoop:
+    pop dx
+    mov ah, 02
+    int 21h
+    dec cx
+    cmp cx, 0
+    jne OutLoop
+    pop bx
+    ret
+;helper functions
 PrintTab:
     mov dl, 9
     mov ah, 02
