@@ -1,4 +1,4 @@
-;Jambulov Timur TP07154 = CSLLT Individual Assignment Code = Inventory Managment System
+;Jambulov Timur TP07154 = CSLLT Individual Assignment Code = Inventory Management System
 ; 64KB space for program
 .model small
 ; 256 bytes stack
@@ -11,29 +11,29 @@
 MAX_ITEMS equ 40    ; Maximum number of items
 
 ; Item attributes definitions
-ItemAmount dw 2                     
-ItemNameLength equ 20               
-ItemID equ 2                        
-ItemValue equ 2                     
-ItemData dw 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, '$'
-ItemPriceList dw 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, '$'
-TotalSales dw 0                     
+ItemCount dw 2                     
+NameLength equ 20               
+IDValue equ 2                        
+ValueAmount equ 2                     
+ProductData dw 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, '$'
+PriceList dw 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, '$'
+TotalRevenue dw 1                  
 
-; Low Stock Item menu header
-LowStockHeader db 10, '==============| LOW STOCK ITEMS |==============', 10 
-               db '==============================================', 10 
-               db 'ID', 9, 'Title', 9, 9, 'Amount', 10,10, '$'
+; headerline for low Stock items menu
+LowStockMenu db 10, '==============| LOW STOCK ITEMS |==============', 10
+             db '==============================================', 10 
+             db 'ID', 9, 'Title', 9, 9, 'Amount', 10,10, '$'
 
 ; Main menu attributes definitions
-MainMenu db 10,10,10, "============================", 10 
-         db "=== TIMUR`S PCPARTS SHOP ===", 10           
-         db "============================", 10,10        
-         db "1. Display Items", 10                   
-         db "2. Add Item", 10                        
-         db "3. Sell Item", 10
-         db "4. Display Low Stock Items", 10                      
-         db "0. Exit Program", 10,10                 
-         db "========================", '$'    
+MainOptions db 10,10,10, "============================", 10 
+           db "=== TIMUR`S PCPARTS SHOP ===", 10           
+           db "============================", 10,10        
+           db "1. Display Items", 10                   
+           db "2. Add Item", 10                        
+           db "3. Sell Item", 10
+           db "4. Display Low Stock Items", 10                      
+           db "0. Exit Program", 10,10                 
+           db "========================", '$'    
 
 ;Item`s header and columns
 ItemList dw 00, 01, 02, 03, 04, 05, 06, 07, 08, 09
@@ -44,171 +44,183 @@ ItemHeader db 10, '================| TIMUR`S PCPARTS SHOP |==================', 
            db 'ItemID', 9, 'Name', 9, 9, 'Price', 9, 'Amount', 10,10, '$' 
 
 
-SupplyMessage db '==========================================================', 10,10 
-              db '===| Some items are low in stock, please supply more !|===', 10,10        
-              db '==========================================================', 10,10   
-              db '1. Main Menu', 10,10                                    
-              db '0. Exit Program', 10,10                                 
-              db 'Please select an option: $'                             
+RestockMessage db '==========================================================', 10,10 
+               db '===| Some items are low in stock, please supply more !|===', 10,10        
+               db '==========================================================', 10,10   
+               db '1. Leave to title/main menu', 10,10                                    
+               db '0. Terminate program', 10,10                                 
+               db 'Please select an option: $'                             
 
-ItemToSupply dw ?                    ; Variable for item to supply
-ItemSupplyID dw ?                    ; Variable for supply item ID
+SupplyItem dw ?                    ; Variable for item to supply
+SupplyItemID dw ?                  ; Variable for supply item ID
 
 ;Supply definitions / Add items procedure
-SupplyHeader db '==========================================================', 10,10 
-             db 9, 9, 32, 32, 'ADD ITEMS', 10,10                         
-             db '==========================================================', 10,10   
-             db 'Input item ID: $'                                       
-SupplyPrompt db 10,10, 'Input amount to supply from 1 to 9: $' 
-SupplySuccess db 10,10, ' Item supplied successfully.', 10, '$' 
+RestockHeader db '==========================================================', 10,10 
+               db 32, 32, 32, 32, 'ADD ITEMS', 10,10                         
+               db '==========================================================', 10,10   
+               db 'Input item ID: $'                                       
+RestockPrompt db 10,10, 'Input amount to supply from 1 to 9: $' 
+RestockSuccess db 10,10, ' Item supplied successfully.', 10, '$' 
 
 ;Sell Menu Definitions
-SellHeader db '==========================================================', 10,10 
-           db 32, 32, 32, 32, 'SELL ITEM', 10,10                         
-           db '==========================================================', 10,10   
-           db 'Input item ID: $'                                        ;
+SellMenuHeader db '==========================================================', 10,10 
+               db 32, 32, 32, 32, 'SELL ITEM', 10,10                         
+               db '==========================================================', 10,10   
+               db 'Please provide/input item ID: $'                                        ;
 SellPrompt db 10,10, 'Input amount to sell from 1 to 9: $' 
 SellSuccess db 10,10, ' Item sold successfully.', 10, '$'    
 SellFailure db 10,10, ' Insufficient amount to sell.', 10, '$' 
 
 ;Additional definitions
-InputError db 10, 'Invalid option selected.', 10, '$' 
-UserInputPrompt db 10,10, 'Please select an option: $' 
-ExitMsgMessage db 10,10, '=======| Thank you for choosing our shop! |=======','$' 
-BlankSpace db '                           ','$' 
+ErrorMsg db 10, 'Invalid option selected.', 10, '$' 
+PromptMsg db 10,10, 'Please select an option: $' 
+ExitMessage db 10,10, '=======| Thank you for choosing our shop! |=======','$' 
+BlankLine db '                           ','$' 
 
 
 ;Code segment
 .code
-main PROC
-;Getting the data segment address and loading into data segment register
+start PROC
+;Getting the data segment address and loading into DS reg.
   mov ax, @data       
   mov ds, ax          
   
-  call DisplayMainMenu ; Call procedure to display the main menu
+  call ShowMainMenu ; Call procedure to display the title/main menu
   
   mov ah, 01h         
   int 21h             ; Read user input and interrupt of reading
 
   ;Basically a switch statement implemented in Assembly
   cmp al, '1'         
-  je ShowItems        ; option jumping to ShowItems
+  je DisplayItems     ; option jumping to DisplayItems
   
   cmp al, '2'         
-  je AddItemsMenu     ; option jumping to AddItemsMenu
+  je RestockMenu      ; option jumping to RestockMenu
   
   cmp al, '3'         
-  je SellItemsMenu    ; option jumping to SellItemsMenu
+  je SellMenu         ; option jumping to SellMenu
   
   cmp al, '4'
-  jmp DisplayLowStockItems ; option jumping to DisplayLowStockItems
+  jmp ShowLowStockItems ; option jumping to ShowLowStockItems
 
   cmp al, '0'         
   je ExitProgram      ; option jumping to ExitProgram
 
-  jmp main            ; Similar to break(), jumps back to main function
+  jmp start           ; Similar to break(), jumps back to start function
 
-;ShowItems Procedure Segment
+;DisplayItems Procedure Segment
 
 ;clears display, shows items and handles user`s choice after 
-ShowItems:              
-    call Refresh
-    call DisplayItems
-    call NavigateAfterDisplay
+DisplayItems:              
+    call ClearScreen
+    call ListItems
+    call AfterDisplayNav
     ret
-;after successful execution, promts user to either leave to main menu or leave from program
-NavigateAfterDisplay:
-    lea dx, SupplyMessage
+;after successful execution, prompts user to either leave to main menu or exit the program
+AfterDisplayNav:
+    ;load and display restock message
+    lea dx, RestockMessage
     mov ah, 09h
     int 21h
-    mov ah, 01h 
+
+    ;prompt user for input
+    mov ah, 01h
     int 21h
+
+    ;check user input and navigate accordingly
     cmp al, '0'
-    je ExitProgram
+    je TerminateProgram
     cmp al, '1'
-    je main
-    jmp main
+    je RestartProgram
+    jmp RestartProgram
+
+TerminateProgram:
+    call ExitProgram
     ret
 
-;Menu functions, clears display, shows items and proceed to the related procedures
-AddItemsMenu:
-    call Refresh
-    call DisplayItems
-    call SupplyItems
+RestartProgram:
+    call start
     ret
 
-SellItemsMenu:
-    call Refresh
-    call DisplayItems
+;Menu functions, clears display, shows items and proceeds to the related procedures
+RestockMenu:
+    call ClearScreen
+    call ListItems
+    call RestockItems
+    ret
+
+SellMenu:
+    call ClearScreen
+    call ListItems
     call SellItems
     ret
 
 ;program exit procedure
 ExitProgram:
-    call Refresh
-    call ExitMsg
+    call ClearScreen
+    call ShowExitMessage
     ret
 ;Check if ax value is greater than 5
-CheckVal:
+ValidateValue:
     mov bx, ax
     cmp bx, 5
-    jle MarkValue
+    jle HighlightValue
     ret
-; ax value < 5, highlight the number onto display, thus allowing to have marked number of items that are low in stock
-MarkValue:
+; ax value < 5, highlight the number on the display, thus marking the number of items that are low in stock
+HighlightValue:
     push ax 
     push bx
     push cx
     mov bx, dx 
     mov cx, 10 
 
-MarkLoop:
+HighlightLoop:
     mov dl, [bx] 
     mov ah, 09h
     mov al, dl 
     mov bl, 0Eh 
     int 10h
     inc bx 
-    loop MarkLoop 
+    loop HighlightLoop 
 
-MarkRestoreStack:
+RestoreHighlight:
     pop cx 
     pop bx
     pop ax
     ret
 ;print strings(10 chars) by saving ax, bx, cx registers, printing out each character and restoring registers
-PrintStr:
+PrintString:
     push ax 
     push bx
     push cx
     mov bx, dx 
     mov cx, 10 
 
-StrLoop:
+StringLoop:
     mov dl, [bx] 
     int 21h 
     inc bx 
-    loop StrLoop 
+    loop StringLoop 
 
-RestoreStack:
+RestorePrint:
     pop cx 
     pop bx
     pop ax
     ret
-;GUI proceduress
-DisplayMainMenu:
-    call Refresh
-    lea dx, MainMenu
+;GUI procedures
+ShowMainMenu:
+    call ClearScreen
+    lea dx, MainOptions
     mov ah, 09h
     int 21h
     
-    lea dx, UserInputPrompt
+    lea dx, PromptMsg
     mov ah, 09h
     int 21h
     ret
 
 ;display GUI for items and item menu
-DisplayItems:
+ListItems:
     mov dx, offset ItemHeader
     mov ah, 09
     int 21h
@@ -216,37 +228,37 @@ DisplayItems:
     mov bp, 0
     lea si, ItemList
 ;iterate through items
-ItemsLoop:
+ItemLoop:
     mov ax, [si]
     cmp ax, 10
-    ja ItemsEnd
-    call PrintInt
+    ja EndItemLoop
+    call PrintInteger
     call PrintTab
 
     mov dx, offset ItemList + 20
     add dx, bp
-    call PrintStr
+    call PrintString
     call PrintTab
 
     mov ax, [si + 140]
-    call PrintInt
+    call PrintInteger
     call PrintTab
 
     mov ax, [si + 120]
-    call CheckVal
+    call ValidateValue
 
     mov ax, [si + 120]
-    call PrintInt
+    call PrintInteger
     call PrintNewLine
     add bp, 10
     add si, 2
-    jmp ItemsLoop
-ItemsEnd:
+    jmp ItemLoop
+EndItemLoop:
     ret
 
-;supply items = promt user for item id, amount, add to total item number
-SupplyItems:
-    lea dx, SupplyHeader
+;restock items = prompt user for item id, amount, add to total item number
+RestockItems:
+    lea dx, RestockHeader
     mov ah, 09h
     int 21h 
     mov ah, 01
@@ -255,8 +267,8 @@ SupplyItems:
     add al, al
     sub ax, 136
 
-    mov ItemToSupply, ax 
-    lea dx, SupplyPrompt
+    mov SupplyItem, ax 
+    lea dx, RestockPrompt
     mov ah, 09h 
     int 21h
 
@@ -266,24 +278,24 @@ SupplyItems:
     sub ax, 256
     mov cx, ax
     lea si, ItemList
-    add si, ItemToSupply
+    add si, SupplyItem
     add cx, [si]
     mov word ptr [si], cx 
     
-    call Refresh
+    call ClearScreen
     call PrintNewLine
-    call PrintBlank
-    lea dx, SupplySuccess
+    call PrintBlankLine
+    lea dx, RestockSuccess
     mov ah, 09h 
     int 21h 
-    call PrintBlank
-    call DisplayItems
-    call NavigateAfterDisplay
+    call PrintBlankLine
+    call ListItems
+    call AfterDisplayNav
     ret
 
-;procedure SellItems = promt user to item id, promt for amount, deduct amount from total number of items
+;procedure SellItems = prompt user to item id, prompt for amount, deduct amount from total number of items
 SellItems:
-    lea dx, SellHeader
+    lea dx, SellMenuHeader
     mov ah, 09h
     int 21h 
 
@@ -293,7 +305,7 @@ SellItems:
     sub al, 30h
     add al, al 
     sub ax, 136 
-    mov ItemToSupply, ax 
+    mov SupplyItem, ax 
 
     lea dx, SellPrompt
     mov ah, 09h 
@@ -306,63 +318,63 @@ SellItems:
     mov cx, ax
 
     lea si, ItemList
-    add si, ItemToSupply
+    add si, SupplyItem
     mov bx, [si] 
     sub bx, cx
     cmp bx, 0
-    js InsufficientAmount
+    js InsufficientStock
 
     mov word ptr [si], bx
-    jmp ItemSold
+    jmp SoldItem
 
 ;if selling amount > total amount, restore original item number, send error msg and return to menu
-InsufficientAmount: 
+InsufficientStock: 
     mov bx, [si]
     mov word ptr [si], bx
-    call Refresh
+    call ClearScreen
     call PrintNewLine
-    call PrintBlank
+    call PrintBlankLine
     lea dx, SellFailure
     mov ah, 09h 
     int 21h 
-    call PrintBlank
+    call PrintBlankLine
     call PrintNewLine
-    call DisplayItems
-    call NavigateAfterDisplay
+    call ListItems
+    call AfterDisplayNav
     ret 
 
-;successful sale = update total sales, refresh, success msg, updated itemlist, back to menu
-ItemSold:
-    call TotalSold
-    call Refresh
+;successful sale = update total sales, refresh, success msg, updated item list, back to menu
+SoldItem:
+    call UpdateTotalSales
+    call ClearScreen
     call PrintNewLine
-    call PrintBlank
+    call PrintBlankLine
     lea dx, SellSuccess
     mov ah, 09h
     int 21h
 
-    call PrintBlank
+    call PrintBlankLine
     call PrintNewLine
-    call DisplayItems
-    call NavigateAfterDisplay
+    call ListItems
+    call AfterDisplayNav
     ret
 
-;updates total itemssold amount and adjusts item amount
-TotalSold: 
-    mov ax, ItemAmount 
+;updates total items sold amount and adjusts item amount
+UpdateTotalSales: 
+    mov ax, ItemCount 
     sub ax, 120 
-    mov ItemAmount, ax
+    mov ItemCount, ax
     lea si, ItemList 
-    add si, ItemAmount
+    add si, ItemCount
     mov ax, [si]
     add cx, ax 
     mov word ptr [si], cx
     ret
 
-;displays items with low instock
-DisplayLowStockItems:
-    call Refresh
-    lea dx, LowStockHeader
+;displays items with low stock
+ShowLowStockItems:
+    call ClearScreen
+    lea dx, LowStockMenu
     mov ah, 09h
     int 21h
     mov bp, 0
@@ -373,14 +385,14 @@ LowStockLoop:
     cmp ax, 5
     ja SkipLowStockItem  
     mov ax, [si]
-    call PrintInt
+    call PrintInteger
     call PrintTab
     mov dx, offset ItemList + 20
     add dx, bp
-    call PrintStr
+    call PrintString
     call PrintTab
     mov ax, [si + 120]
-    call PrintInt
+    call PrintInteger
     call PrintNewLine
 
 SkipLowStockItem:
@@ -388,23 +400,23 @@ SkipLowStockItem:
     add si, 2
     mov ax, [si]
     cmp ax, 10
-    ja LowStockEnd
+    ja EndLowStockLoop
     jmp LowStockLoop
 
-LowStockEnd:
-    call NavigateAfterDisplay
+EndLowStockLoop:
+    call AfterDisplayNav
     ret
 
 ;displays exit message and terminates the program
-ExitMsg:
-  lea dx, ExitMsgMessage
+ShowExitMessage:
+  lea dx, ExitMessage
   mov ah, 09h
   int 21h  
   mov ah, 4ch
   int 21h
 
 ;clears the display by scrolling the window
-Refresh:
+ClearScreen:
     mov ah, 06h
     mov al, 0
     mov bh, 07h
@@ -414,27 +426,27 @@ Refresh:
     ret
 
 ;converting int value to str value using ax register and prints on display
-PrintInt:
+PrintInteger:
     push bx
     mov bx, 10
     xor cx, cx
 ;converts value, push into stack in reverse order
-InLoopReverse:
+IntReverseLoop:
     xor dx, dx
     div bx
     add dl, '0'
     push dx
     inc cx
     cmp ax, 0
-    jne InLoopReverse
+    jne IntReverseLoop
 ;outputs digits of int pushed into stack, reversing second time, output appear in correct order
-OutLoop:
+IntOutLoop:
     pop dx
     mov ah, 02
     int 21h
     dec cx
     cmp cx, 0
-    jne OutLoop
+    jne IntOutLoop
     pop bx
     ret
 ;helper functions
@@ -450,11 +462,11 @@ PrintNewLine:
     int 21h
     ret
 
-PrintBlank:
-    lea dx, BlankSpace
+PrintBlankLine:
+    lea dx, BlankLine
     mov ah, 09h 
     int 21h 
     ret
 
-main endp
-end main
+start endp
+end start
