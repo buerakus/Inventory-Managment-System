@@ -1,3 +1,4 @@
+;Jambulov Timur TP07154 = CSLLT Individual Assignment Code = Inventory Managment System
 ; 64KB space for program
 .model small
 ; 256 bytes stack
@@ -14,38 +15,38 @@ ItemAmount dw 2
 ItemNameLength equ 20               
 ItemID equ 2                        
 ItemValue equ 2                     
-ItemData dw 2, 1, 0, 2, 1, 0, 40, 10, 19, 13, '$' 
-ItemPriceList dw 5, 8, 4, 2, 4, 9, 8, 1, 8, 10, '$' ;
+ItemData dw 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, '$'
+ItemPriceList dw 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, '$'
 TotalSales dw 0                     
 
 ; Low Stock Item menu header
 LowStockHeader db 10, '==============| LOW STOCK ITEMS |==============', 10 
                db '==============================================', 10 
-               db 'ID', 9, 'Name', 9, 9, 'Quantity', 10,10, '$'
+               db 'ID', 9, 'Title', 9, 9, 'Amount', 10,10, '$'
 
 ; Main menu attributes definitions
-MainMenu db 10,10,10, "------------------------", 10 
-         db "--- Inventory System ---", 10           
-         db "------------------------", 10,10        
+MainMenu db 10,10,10, "============================", 10 
+         db "=== TIMUR`S PCPARTS SHOP ===", 10           
+         db "============================", 10,10        
          db "1. Display Items", 10                   
          db "2. Add Item", 10                        
          db "3. Sell Item", 10
          db "4. Display Low Stock Items", 10                      
          db "0. Exit Program", 10,10                 
-         db "------------------------", '$'    
+         db "========================", '$'    
 
 ;Item`s header and columns
 ItemList dw 00, 01, 02, 03, 04, 05, 06, 07, 08, 09
          db "M.board   ", "Memory    ", "CPU       ", "GPU       ", "Power Unit", "Comp. case", "Fans      ", "HDD       ", "SSD       ", "Monitor   "
          dw 10, 1, 10, 2, 10, 3, 10, 4, 10, 5, 1500, 800, 2000, 1700, 800, 600, 400, 1200, 1500, 1300, 2, 1, 0, 0, 1, 1, 2, 1, 2, 0, '$'
-ItemHeader db 10, '==============| INVENTORY |==============', 10 
-           db '==============================================', 10 
-           db 'ID', 9, 'Name', 9, 9, 'Price', 9, 'Quantity', 10,10, '$' 
+ItemHeader db 10, '================| TIMUR`S PCPARTS SHOP |==================', 10 
+           db '==========================================================', 10 
+           db 'ItemID', 9, 'Name', 9, 9, 'Price', 9, 'Amount', 10,10, '$' 
 
 
-SupplyMessage db '==============================================', 10,10 
-              db ' Items are low in stock, please supply some.', 10,10        
-              db '==============================================', 10,10   
+SupplyMessage db '==========================================================', 10,10 
+              db '===| Some items are low in stock, please supply more !|===', 10,10        
+              db '==========================================================', 10,10   
               db '1. Main Menu', 10,10                                    
               db '0. Exit Program', 10,10                                 
               db 'Please select an option: $'                             
@@ -54,26 +55,26 @@ ItemToSupply dw ?                    ; Variable for item to supply
 ItemSupplyID dw ?                    ; Variable for supply item ID
 
 ;Supply definitions / Add items procedure
-SupplyHeader db '==============================================', 10,10 
+SupplyHeader db '==========================================================', 10,10 
              db 9, 9, 32, 32, 'ADD ITEMS', 10,10                         
-             db '==============================================', 10,10   
-             db 'Enter item ID: $'                                       
-SupplyPrompt db 10,10, 'Enter quantity to supply from 1 to 9: $' 
+             db '==========================================================', 10,10   
+             db 'Input item ID: $'                                       
+SupplyPrompt db 10,10, 'Input amount to supply from 1 to 9: $' 
 SupplySuccess db 10,10, ' Item supplied successfully.', 10, '$' 
 
 ;Sell Menu Definitions
-SellHeader db '==============================================', 10,10 
-           db 9, 9, 32, 32, 'SELL ITEM', 10,10                         
-           db '==============================================', 10,10   
-           db 'Enter item ID: $'                                        ;
-SellPrompt db 10,10, 'Enter quantity to sell from 1 to 9: $' 
+SellHeader db '==========================================================', 10,10 
+           db 32, 32, 32, 32, 'SELL ITEM', 10,10                         
+           db '==========================================================', 10,10   
+           db 'Input item ID: $'                                        ;
+SellPrompt db 10,10, 'Input amount to sell from 1 to 9: $' 
 SellSuccess db 10,10, ' Item sold successfully.', 10, '$'    
-SellFailure db 10,10, ' Insufficient quantity to sell.', 10, '$' 
+SellFailure db 10,10, ' Insufficient amount to sell.', 10, '$' 
 
 ;Additional definitions
 InputError db 10, 'Invalid option selected.', 10, '$' 
 UserInputPrompt db 10,10, 'Please select an option: $' 
-ExitMsgMessage db 10,10, '=======| Thank you for using the inventory system |=======','$' 
+ExitMsgMessage db 10,10, '=======| Thank you for choosing our shop! |=======','$' 
 BlankSpace db '                           ','$' 
 
 
@@ -91,25 +92,25 @@ main PROC
 
   ;Basically a switch statement implemented in Assembly
   cmp al, '1'         
-  je ShowItems        ; jump to ShowItems
+  je ShowItems        ; option jumping to ShowItems
   
   cmp al, '2'         
-  je AddItemsMenu     ; jump to AddItemsMenu
+  je AddItemsMenu     ; option jumping to AddItemsMenu
   
   cmp al, '3'         
-  je SellItemsMenu    ; jump to SellItemsMenu
+  je SellItemsMenu    ; option jumping to SellItemsMenu
   
   cmp al, '4'
-  jmp DisplayLowStockItems ; jump to DisplayLowStockItems
+  jmp DisplayLowStockItems ; option jumping to DisplayLowStockItems
 
   cmp al, '0'         
-  je ExitProgram      ; jump to ExitProgram
+  je ExitProgram      ; option jumping to ExitProgram
 
   jmp main            ; Similar to break(), jumps back to main function
 
 ;ShowItems Procedure Segment
 
-;clears screen, shows items and handles user`s choice after 
+;clears display, shows items and handles user`s choice after 
 ShowItems:              
     call Refresh
     call DisplayItems
@@ -129,7 +130,7 @@ NavigateAfterDisplay:
     jmp main
     ret
 
-;Menu functions, clears screen, shows items and proceed to the related procedures
+;Menu functions, clears display, shows items and proceed to the related procedures
 AddItemsMenu:
     call Refresh
     call DisplayItems
@@ -243,7 +244,7 @@ ItemsLoop:
 ItemsEnd:
     ret
 
-;supply items - promt user for item id, quantity, add to total item number
+;supply items = promt user for item id, amount, add to total item number
 SupplyItems:
     lea dx, SupplyHeader
     mov ah, 09h
@@ -280,7 +281,7 @@ SupplyItems:
     call NavigateAfterDisplay
     ret
 
-;sell items - promt user to item id, promt for amount, deduct amount from total number of items
+;sell items = promt user to item id, promt for amount, deduct amount from total number of items
 SellItems:
     lea dx, SellHeader
     mov ah, 09h
@@ -330,7 +331,7 @@ InsufficientAmount:
     call NavigateAfterDisplay
     ret 
 
-;successful sale - update total sales, refresh, success msg, updated itemlist, back to menu
+;successful sale = update total sales, refresh, success msg, updated itemlist, back to menu
 ItemSold:
     call TotalSold
     call Refresh
@@ -346,7 +347,7 @@ ItemSold:
     call NavigateAfterDisplay
     ret
 
-;updates the total sold amount and adjusts item quantity
+;updates the total sold amount and adjusts item amount
 TotalSold: 
     mov ax, ItemAmount 
     sub ax, 120 
@@ -402,7 +403,7 @@ ExitMsg:
   mov ah, 4ch
   int 21h
 
-;clears the screen by scrolling the window
+;clears the display by scrolling the window
 Refresh:
     mov ah, 06h
     mov al, 0
@@ -412,7 +413,7 @@ Refresh:
     int 10h
     ret
 
-;converting int value to str value using ax register and prints on screen
+;converting int value to str value using ax register and prints on display
 PrintInt:
     push bx
     mov bx, 10
