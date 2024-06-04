@@ -8,4 +8,4 @@ Inventory managment system created in TASM (Borland`s x86 MS-DOS Assembler)
 Display Inventory,
 Add Item,
 Sell Item,
-Show low stock items,
+Show low stock items.
