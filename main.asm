@@ -154,7 +154,7 @@ CheckVal:
     cmp bx, 5
     jle MarkValue
     ret
-;If value ax value less than 5, highlight the number onto display, thus allowing to have marked number of items that are low in stock
+; ax value < 5, highlight the number onto display, thus allowing to have marked number of items that are low in stock
 MarkValue:
     push ax 
     push bx
@@ -195,7 +195,7 @@ RestoreStack:
     pop bx
     pop ax
     ret
-;GUI functions
+;GUI proceduress
 DisplayMainMenu:
     call Refresh
     lea dx, MainMenu
@@ -281,7 +281,7 @@ SupplyItems:
     call NavigateAfterDisplay
     ret
 
-;sell items = promt user to item id, promt for amount, deduct amount from total number of items
+;procedure SellItems = promt user to item id, promt for amount, deduct amount from total number of items
 SellItems:
     lea dx, SellHeader
     mov ah, 09h
@@ -315,7 +315,7 @@ SellItems:
     mov word ptr [si], bx
     jmp ItemSold
 
-;if sell amount > total amount, restore original item number, send error msg and return to menu
+;if selling amount > total amount, restore original item number, send error msg and return to menu
 InsufficientAmount: 
     mov bx, [si]
     mov word ptr [si], bx
@@ -347,7 +347,7 @@ ItemSold:
     call NavigateAfterDisplay
     ret
 
-;updates the total sold amount and adjusts item amount
+;updates total itemssold amount and adjusts item amount
 TotalSold: 
     mov ax, ItemAmount 
     sub ax, 120 
@@ -359,7 +359,7 @@ TotalSold:
     mov word ptr [si], cx
     ret
 
-;displays items with low stock
+;displays items with low instock
 DisplayLowStockItems:
     call Refresh
     lea dx, LowStockHeader
